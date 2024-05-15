@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Drawing;
-using System.Reflection.Metadata;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace ConsoleUtility {
@@ -36,12 +34,36 @@ namespace ConsoleUtility {
         public static string CurrentForegroundColor { get; private set; }
         public static string CurrentBackgroundColor { get; private set; }
 
+        public static int CursorX => Console.CursorLeft;
+        public static int CursorY => Console.CursorTop;
+        public static int ConsoleWidth => Console.BufferWidth;
+        public static int ConsoleHeight => Console.BufferHeight;
+
+        // For Suggestion Handler
+        private static string _userInput = string.Empty;
+        private static string _oldSuggestion = string.Empty;
+        private static List<string> _suggestions = new List<string>();
+        private static string _currentSuggestion = string.Empty;
+        private static int _currentSuggestionIndex = 0;
+        private static int _index = 0;
+
+        public static int CursorIndex {
+            get {
+                return CursorY * ConsoleWidth + CursorX;
+            }
+            set {
+                SetValidCursorPosition(value);
+            }
+        }
+
         static UConsole() {
             DefaultForegroundColor = GetHexFromConsoleColor(Console.ForegroundColor);
             DefaultBackgroundColor = GetHexFromConsoleColor(Console.BackgroundColor);
 
             CurrentForegroundColor = DefaultForegroundColor;
             CurrentBackgroundColor = DefaultBackgroundColor;
+
+            Console.GetCursorPosition();
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -123,75 +145,91 @@ namespace ConsoleUtility {
             return ((int)Enum.Parse<ConsoleColorHex>(Enum.GetName(color))).ToString("X6");
         }
 
-        public static void SetCursorPosition(int left, int top) {
-            Console.SetCursorPosition(left, top);
+        public static void SetCursorPosition(int cursorX, int cursorY) {
+            Console.SetCursorPosition(cursorX, cursorY);
         }
 
-        public static void SetValidCursorPosition(int left, int top) {
-            int consoleWidth = Console.BufferWidth;
-            int consoleHeight = Console.BufferHeight;
-
-            int calculatedIndex = top * consoleWidth + left;
+        public static void SetValidCursorPosition(int cursorX, int cursorY) {
+            int calculatedIndex = GetIndexFromCursorPosition(cursorX, cursorY);
 
             // Ensure calculatedIndex remains within bounds
-            int validIndex = Math.Max(0, Math.Min(calculatedIndex, consoleWidth * consoleHeight - 1));
+            int validIndex = Math.Max(0, Math.Min(calculatedIndex, ConsoleWidth * ConsoleHeight - 1));
 
-            // Calculate left and top without using if statements
-            int calculatedLeft = (validIndex % consoleWidth) * ((validIndex % consoleWidth) > 0 ? 1 : 0);
-            int calculatedTop = (validIndex / consoleWidth) * ((validIndex / consoleWidth) > 0 ? 1 : 0);
+            // Calculate CursorX and CursorY without using if statements
+            int calculatedCursorX = (validIndex % ConsoleWidth) * ((validIndex % ConsoleWidth) > 0 ? 1 : 0);
+            int calculatedCursorY = (validIndex / ConsoleWidth) * ((validIndex / ConsoleWidth) > 0 ? 1 : 0);
 
-            Console.SetCursorPosition(calculatedLeft, calculatedTop);
+            Console.SetCursorPosition(calculatedCursorX, calculatedCursorY);
+        }
+
+        public static void SetValidCursorPosition(int index) {
+            // Ensure calculatedIndex remains within bounds
+            int validIndex = Math.Max(0, Math.Min(index, ConsoleWidth * ConsoleHeight - 1));
+
+            // Calculate CursorX and CursorY without using if statements
+            int calculatedCursorX = (validIndex % ConsoleWidth) * ((validIndex % ConsoleWidth) > 0 ? 1 : 0);
+            int calculatedCursorY = (validIndex / ConsoleWidth) * ((validIndex / ConsoleWidth) > 0 ? 1 : 0);
+
+            Console.SetCursorPosition(calculatedCursorX, calculatedCursorY);
+        }
+
+        public static (int cursorX, int cursorY) GetCursorPosition() {
+            return (CursorX, CursorY);
+        }
+
+        public static int GetIndexFromCursorPosition(int cursorX, int cursorY) {
+            return cursorY * ConsoleWidth + cursorX;
         }
 
         // Console Write And Read Command
         public static void WriteWithCursorRestore(string str) {
-            (int left, int top) = Console.GetCursorPosition();
+            (int cursorX, int cursorY) = Console.GetCursorPosition();
             Write(str);
-            SetValidCursorPosition(left, top);
+            SetValidCursorPosition(cursorX, cursorY);
         }
 
         public static void WriteRichTextWithCursorRestore(string richTextString) {
-            (int left, int top) = Console.GetCursorPosition();
+            (int cursorX, int cursorY) = Console.GetCursorPosition();
             WriteRichText(richTextString);
-            SetValidCursorPosition(left, top);
+            SetValidCursorPosition(cursorX, cursorY);
         }
 
-        public static void WriteWithAtPostion(string str, int left, int top) {
-            SetValidCursorPosition(left, top);
+        public static void WriteWithAtPostion(string str, int cursorX, int cursorY) {
+            SetValidCursorPosition(cursorX, cursorY);
             Write(str);
         }
 
 
         public static void WriteWithCursorRestore(string str, string foregroundHexColor = null, string backgroundHexColor = null) {
-            (int left, int top) = Console.GetCursorPosition();
+            (int cursorX, int cursorY) = Console.GetCursorPosition();
             Write(str, foregroundHexColor, backgroundHexColor);
-            SetValidCursorPosition(left, top);
+            SetValidCursorPosition(cursorX, cursorY);
         }
 
-        public static void WriteWithAtPostion(string str, int left, int top, string foregroundHexColor = null, string backgroundHexColor = null) {
-            SetValidCursorPosition(left, top);
+        public static void WriteWithAtPostion(string str, int cursorX, int cursorY, string foregroundHexColor = null, string backgroundHexColor = null) {
+            SetValidCursorPosition(cursorX, cursorY);
             Write(str, foregroundHexColor, backgroundHexColor);
         }
 
         public static void WriteWithCursorRestore(string str, Color? foregroundHexColor = null, Color? backgroundHexColor = null) {
-            (int left, int top) = Console.GetCursorPosition();
+            (int cursorX, int cursorY) = Console.GetCursorPosition();
             Write(str, foregroundHexColor, backgroundHexColor);
-            SetValidCursorPosition(left, top);
+            SetValidCursorPosition(cursorX, cursorY);
         }
 
-        public static void WriteWithAtPostion(string str, int left, int top, Color? foregroundHexColor = null, Color? backgroundHexColor = null) {
-            SetValidCursorPosition(left, top);
+        public static void WriteWithAtPostion(string str, int cursorX, int cursorY, Color? foregroundHexColor = null, Color? backgroundHexColor = null) {
+            SetValidCursorPosition(cursorX, cursorY);
             Write(str, foregroundHexColor, backgroundHexColor);
         }
 
         public static void WriteWithCursorRestore(string str, ConsoleColor? foregroundHexColor = null, ConsoleColor? backgroundHexColor = null) {
-            (int left, int top) = Console.GetCursorPosition();
+            (int cursorX, int cursorY) = Console.GetCursorPosition();
             Write(str, foregroundHexColor, backgroundHexColor);
-            SetValidCursorPosition(left, top);
+            SetValidCursorPosition(cursorX, cursorY);
         }
 
-        public static void WriteWithAtPostion(string str, int left, int top, ConsoleColor? foregroundHexColor = null, ConsoleColor? backgroundHexColor = null) {
-            SetValidCursorPosition(left, top);
+        public static void WriteWithAtPostion(string str, int cursorX, int cursorY, ConsoleColor? foregroundHexColor = null, ConsoleColor? backgroundHexColor = null) {
+            SetValidCursorPosition(cursorX, cursorY);
             Write(str, foregroundHexColor, backgroundHexColor);
         }
 
@@ -325,16 +363,13 @@ namespace ConsoleUtility {
 
 
         public static void DeleteChars(bool invert = false, int numberOfCharactersToDelete = 1) {
-            int CursorLeft = Console.CursorLeft;
-            int CursorTop = Console.CursorTop;
-
             for(int i = 0; i < numberOfCharactersToDelete; i++) {
                 if(invert) {
                     Console.Write(" ", true);
                 } else {
-                    SetValidCursorPosition(CursorLeft - 1, CursorTop);
+                    SetValidCursorPosition(CursorIndex - 1);
                     Console.Write(" ", true);
-                    SetValidCursorPosition(CursorLeft - 1, CursorTop);
+                    SetValidCursorPosition(CursorIndex - 1);
                 }
             }
         }
@@ -420,14 +455,9 @@ namespace ConsoleUtility {
             return Console.ReadKey(intercept);
         }
 
-        private static string userInput = string.Empty;
-        private static string oldSuggestion = string.Empty;
-        private static List<string> suggestions = new List<string>();
-        private static string currentSuggestion = string.Empty;
-        private static int currentSuggestionIndex = 0;
-        private static int index = 0;
-        
+
         public static string ReadLineWithSuggestionHandler(string RichTextValue, Func<string, List<string>> handler) {
+            ResetSuggestions();
             WriteRichText(RichTextValue);
 
             ConsoleKeyInfo keyInfo;
@@ -435,85 +465,94 @@ namespace ConsoleUtility {
             do {
                 keyInfo = Console.ReadKey(true);
                 if(keyInfo.Key == ConsoleKey.Backspace) {
-                    if(index == 0) continue;
+                    if(_index == 0) continue;
                     DeleteChars();
-                    userInput = userInput.Remove(index - 1, 1);
+                    _userInput = _userInput.Remove(_index - 1, 1);
 
                     HandleSuggestions(handler);
                     UpdateString(0, -1);
                 } else if(keyInfo.Key == ConsoleKey.Delete) {
-                    if(index >= userInput.Length) continue;
+                    if(_index >= _userInput.Length) continue;
                     DeleteChars(true);
-                    SetValidCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
-                    userInput = userInput.Remove(index, 1);
+                    SetValidCursorPosition(CursorIndex - 1);
+                    _userInput = _userInput.Remove(_index, 1);
 
                     HandleSuggestions(handler);
                     UpdateString();
                 } else if(keyInfo.Key == ConsoleKey.LeftArrow) {
-                    if(index == 0) continue;
-                    index--;
+                    if(_index == 0) continue;
+                    _index--;
 
-                    SetValidCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
+                    SetValidCursorPosition(CursorIndex - 1);
                 } else if(keyInfo.Key == ConsoleKey.RightArrow) {
-                    if(index >= userInput.Length) continue;
-                    index++;
+                    if(_index >= _userInput.Length) continue;
+                    _index++;
 
-                    SetValidCursorPosition(Console.CursorLeft + 1, Console.CursorTop);
+                    SetValidCursorPosition(CursorIndex + 1);
                 } else if(keyInfo.Key == ConsoleKey.UpArrow) {
-                    currentSuggestionIndex = (suggestions.Count != 0) ? (currentSuggestionIndex + 1) % suggestions.Count : 0;
-                    currentSuggestion = suggestions.Count > 0 ? suggestions[currentSuggestionIndex] : "";
+                    _currentSuggestionIndex = (_suggestions.Count != 0) ? (_currentSuggestionIndex + 1) % _suggestions.Count : 0;
+                    _currentSuggestion = _suggestions.Count > 0 ? _suggestions[_currentSuggestionIndex] : "";
 
                     UpdateString();
                 } else if(keyInfo.Key == ConsoleKey.DownArrow) {
-                    currentSuggestionIndex = (suggestions.Count != 0) ? ((currentSuggestionIndex - 1) % suggestions.Count + suggestions.Count) % suggestions.Count: 0;
-                    currentSuggestion = suggestions.Count > 0 ? suggestions[currentSuggestionIndex] : "";
-                    
+                    _currentSuggestionIndex = (_suggestions.Count != 0) ? ((_currentSuggestionIndex - 1) % _suggestions.Count + _suggestions.Count) % _suggestions.Count : 0;
+                    _currentSuggestion = _suggestions.Count > 0 ? _suggestions[_currentSuggestionIndex] : "";
+
                     UpdateString();
                 } else if(keyInfo.Key == ConsoleKey.Tab) {
-                    if(suggestions.Count == 0) continue;
+                    if(_suggestions.Count == 0) continue;
 
-                    int suggestionLength = currentSuggestion.Length;
+                    int suggestionLength = _currentSuggestion.Length;
 
                     ResetCursorPostion();
-                    userInput = userInput.Insert(index, currentSuggestion);
+                    _userInput = _userInput.Insert(_index, _currentSuggestion);
 
                     HandleSuggestions(handler);
                     UpdateString(suggestionLength);
-                } else if (keyInfo.Key != ConsoleKey.Enter) {
-                    userInput = userInput.Insert(index, keyInfo.KeyChar.ToString());
+                } else if(keyInfo.Key != ConsoleKey.Enter) {
+                    _userInput = _userInput.Insert(_index, keyInfo.KeyChar.ToString());
 
                     HandleSuggestions(handler);
                     UpdateString(1);
                 } else {
-                    int paddingLength = Math.Max(0, oldSuggestion.Length - currentSuggestion.Length);
+                    int paddingLength = Math.Max(0, _oldSuggestion.Length - _currentSuggestion.Length);
 
-                    string newString = userInput.Substring(index, userInput.Length - index);
-                    WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{new string(' ', oldSuggestion.Length)}");
+                    string newString = _userInput.Substring(_index, _userInput.Length - _index);
+                    WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{new string(' ', _oldSuggestion.Length)}");
                 }
-                oldSuggestion = currentSuggestion;
+                _oldSuggestion = _currentSuggestion;
             } while(keyInfo.Key != ConsoleKey.Enter);
 
-            return userInput;
+            return _userInput;
+        }
+
+        private static void ResetSuggestions() {
+            _userInput = string.Empty;
+            _oldSuggestion = string.Empty;
+            _suggestions.Clear();
+            _currentSuggestion = string.Empty;
+            _currentSuggestionIndex = 0;
+            _index = 0;
         }
 
         private static void ResetCursorPostion() {
-            SetValidCursorPosition(Console.CursorLeft + (userInput.Length - index), Console.CursorTop);
-            index = userInput.Length;
+            SetValidCursorPosition(CursorIndex + (_userInput.Length - _index));
+            _index = _userInput.Length;
         }
 
         private static void HandleSuggestions(Func<string, List<string>> handler) {
-            suggestions = handler.Invoke(userInput);
-            currentSuggestionIndex = 0;
-            currentSuggestion = suggestions.Count > 0 ? suggestions[currentSuggestionIndex] : "";
+            _suggestions = handler.Invoke(_userInput);
+            _currentSuggestionIndex = 0;
+            _currentSuggestion = _suggestions.Count > 0 ? _suggestions[_currentSuggestionIndex] : "";
         }
 
         private static void UpdateString(int offset = 0, int indexOffset = 0) {
-            string newString = userInput.Substring(index + indexOffset, userInput.Length - index - indexOffset);
-            int paddingLength = Math.Max(0, oldSuggestion.Length - currentSuggestion.Length);
-            index += offset + indexOffset;
+            string newString = _userInput.Substring(_index + indexOffset, _userInput.Length - _index - indexOffset);
+            int paddingLength = Math.Max(0, _oldSuggestion.Length - _currentSuggestion.Length);
+            _index += offset + indexOffset;
 
-            WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{currentSuggestion}{new string(' ', paddingLength)} ");
-            SetValidCursorPosition(Console.CursorLeft + offset , Console.CursorTop);
+            WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{_currentSuggestion}{new string(' ', paddingLength)} ");
+            SetValidCursorPosition(CursorIndex + offset);
         }
 
         public static void Clear() {
