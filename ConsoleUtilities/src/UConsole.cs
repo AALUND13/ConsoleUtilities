@@ -468,15 +468,6 @@ namespace ConsoleUtility {
                 if(keyInfo.Key == ConsoleKey.Backspace) {
                     if(_index == 0) continue;
 
-                    int? endWordLength = null;
-                    if(keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
-                        Regex regex = new Regex(@"(\w+|.)\s*$", RegexOptions.Compiled);
-                        Match match = regex.Match(_userInput.Substring(0, _index));
-                        if(match.Success) {
-                            endWordLength = match.Value.Length;
-                        }
-                    }
-
                     int deleteLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
                     DeleteChars(false, deleteLength);
@@ -494,7 +485,7 @@ namespace ConsoleUtility {
                     _userInput = _userInput.Remove(_index, deleteLength);
 
                     HandleSuggestions(handler);
-                    UpdateString(0, 0, _userInput.Substring(_index).Length + 2);
+                    UpdateString(0, 0, _userInput.Substring(_index).Length + 2 + _oldSuggestion.Length);
                 } else if(keyInfo.Key == ConsoleKey.LeftArrow) {
                     if(_index == 0) continue;
                     _index--;
