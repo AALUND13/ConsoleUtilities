@@ -1,5 +1,7 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace ConsoleUtility {
     /// <summary>
@@ -39,14 +41,6 @@ namespace ConsoleUtility {
         public static int ConsoleWidth => Console.BufferWidth;
         public static int ConsoleHeight => Console.BufferHeight;
 
-        // For Suggestion Handler
-        private static string _userInput = string.Empty;
-        private static string _oldSuggestion = string.Empty;
-        private static List<string> _suggestions = new List<string>();
-        private static string _currentSuggestion = string.Empty;
-        private static int _currentSuggestionIndex = 0;
-        private static int _index = 0;
-
         public static int CursorIndex {
             get {
                 return CursorY * ConsoleWidth + CursorX;
@@ -55,6 +49,14 @@ namespace ConsoleUtility {
                 SetValidCursorPosition(value);
             }
         }
+
+        // For Suggestion Handler
+        private static string _userInput = string.Empty;
+        private static string _oldSuggestion = string.Empty;
+        private static List<string> _suggestions = new List<string>();
+        private static string _currentSuggestion = string.Empty;
+        private static int _currentSuggestionIndex = 0;
+        private static int _index = 0;
 
         static UConsole() {
             DefaultForegroundColor = GetHexFromConsoleColor(Console.ForegroundColor);
@@ -363,14 +365,13 @@ namespace ConsoleUtility {
 
 
         public static void DeleteChars(bool invert = false, int numberOfCharactersToDelete = 1) {
-            for(int i = 0; i < numberOfCharactersToDelete; i++) {
-                if(invert) {
-                    Console.Write(" ", true);
-                } else {
-                    SetValidCursorPosition(CursorIndex - 1);
-                    Console.Write(" ", true);
-                    SetValidCursorPosition(CursorIndex - 1);
-                }
+            string padding = new string(' ', numberOfCharactersToDelete);
+            if(invert) {
+                Write(padding);
+            } else {
+                // Write the padding characters and then move the cursor back
+                WriteWithCursorRestore(padding);
+                SetValidCursorPosition(CursorIndex - numberOfCharactersToDelete);
             }
         }
 
@@ -466,19 +467,34 @@ namespace ConsoleUtility {
                 keyInfo = Console.ReadKey(true);
                 if(keyInfo.Key == ConsoleKey.Backspace) {
                     if(_index == 0) continue;
-                    DeleteChars();
-                    _userInput = _userInput.Remove(_index - 1, 1);
+
+                    int? endWordLength = null;
+                    if(keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+                        Regex regex = new Regex(@"(\w+|.)\s*$", RegexOptions.Compiled);
+                        Match match = regex.Match(_userInput.Substring(0, _index));
+                        if(match.Success) {
+                            endWordLength = match.Value.Length;
+                        }
+                    }
+
+                    int deleteLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
+
+                    DeleteChars(false, deleteLength);
+                    _userInput = _userInput.Remove(_index - deleteLength, deleteLength);
 
                     HandleSuggestions(handler);
-                    UpdateString(0, -1);
+                    UpdateString(0, -deleteLength, deleteLength);
                 } else if(keyInfo.Key == ConsoleKey.Delete) {
                     if(_index >= _userInput.Length) continue;
-                    DeleteChars(true);
-                    SetValidCursorPosition(CursorIndex - 1);
-                    _userInput = _userInput.Remove(_index, 1);
+                    Debug.WriteLine($"index: {_index} | userInput length: {_userInput.Length}");
+                    int deleteLength = GetStartWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
+
+                    DeleteChars(true, deleteLength);
+                    SetValidCursorPosition(CursorIndex - deleteLength);
+                    _userInput = _userInput.Remove(_index, deleteLength);
 
                     HandleSuggestions(handler);
-                    UpdateString();
+                    UpdateString(0, 0, _userInput.Substring(_index).Length + 2);
                 } else if(keyInfo.Key == ConsoleKey.LeftArrow) {
                     if(_index == 0) continue;
                     _index--;
@@ -526,6 +542,20 @@ namespace ConsoleUtility {
             return _userInput;
         }
 
+        private static int GetStartWordLength(bool skip) {
+            if (skip) return 1;
+            Regex regex = new Regex(@"^\s*(\w+|.)", RegexOptions.Compiled);
+            Match match = regex.Match(_userInput.Substring(_index));
+            return match.Success ? match.Value.Length : 1;
+        }
+
+        private static int GetEndWordLength(bool skip) {
+            if(skip) return 1;
+            Regex regex = new Regex(@"(\w+|.)\s*$", RegexOptions.Compiled);
+            Match match = regex.Match(_userInput.Substring(0, _index));
+            return match.Success ? match.Value.Length : 1;
+        }
+
         private static void ResetSuggestions() {
             _userInput = string.Empty;
             _oldSuggestion = string.Empty;
@@ -546,9 +576,9 @@ namespace ConsoleUtility {
             _currentSuggestion = _suggestions.Count > 0 ? _suggestions[_currentSuggestionIndex] : "";
         }
 
-        private static void UpdateString(int offset = 0, int indexOffset = 0) {
+        private static void UpdateString(int offset = 0, int indexOffset = 0, int paddingLengthOffset = 0) {
             string newString = _userInput.Substring(_index + indexOffset, _userInput.Length - _index - indexOffset);
-            int paddingLength = Math.Max(0, _oldSuggestion.Length - _currentSuggestion.Length);
+            int paddingLength = Math.Max(0, _oldSuggestion.Length - _currentSuggestion.Length) + paddingLengthOffset;
             _index += offset + indexOffset;
 
             WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{_currentSuggestion}{new string(' ', paddingLength)} ");
