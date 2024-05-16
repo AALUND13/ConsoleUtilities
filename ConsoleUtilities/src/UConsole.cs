@@ -465,37 +465,56 @@ namespace ConsoleUtility {
 
             do {
                 keyInfo = Console.ReadKey(true);
+
                 if(keyInfo.Key == ConsoleKey.Backspace) {
                     if(_index == 0) continue;
 
-                    int deleteLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
+                    int endWordLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
-                    DeleteChars(false, deleteLength);
-                    _userInput = _userInput.Remove(_index - deleteLength, deleteLength);
+                    DeleteChars(false, endWordLength);
+                    _userInput = _userInput.Remove(_index - endWordLength, endWordLength);
 
                     HandleSuggestions(handler);
-                    UpdateString(0, -deleteLength, deleteLength);
+                    UpdateString(0, -endWordLength, endWordLength);
                 } else if(keyInfo.Key == ConsoleKey.Delete) {
                     if(_index >= _userInput.Length) continue;
                     Debug.WriteLine($"index: {_index} | userInput length: {_userInput.Length}");
-                    int deleteLength = GetStartWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
+                    int startWirdLength = GetStartWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
-                    DeleteChars(true, deleteLength);
-                    SetValidCursorPosition(CursorIndex - deleteLength);
-                    _userInput = _userInput.Remove(_index, deleteLength);
+                    DeleteChars(true, startWirdLength);
+                    SetValidCursorPosition(CursorIndex - startWirdLength);
+                    _userInput = _userInput.Remove(_index, startWirdLength);
 
                     HandleSuggestions(handler);
                     UpdateString(0, 0, _userInput.Substring(_index).Length + 2 + _oldSuggestion.Length);
                 } else if(keyInfo.Key == ConsoleKey.LeftArrow) {
                     if(_index == 0) continue;
-                    _index--;
+                    int endWordLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
-                    SetValidCursorPosition(CursorIndex - 1);
+                    _index -= endWordLength;
+
+                    SetValidCursorPosition(CursorIndex - endWordLength);
                 } else if(keyInfo.Key == ConsoleKey.RightArrow) {
                     if(_index >= _userInput.Length) continue;
-                    _index++;
+                    int startWirdLength = GetStartWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
-                    SetValidCursorPosition(CursorIndex + 1);
+                    _index += startWirdLength;
+
+                    SetValidCursorPosition(CursorIndex + startWirdLength);
+                } else if(keyInfo.Key == ConsoleKey.Home) {
+                    if(_index == 0) continue;
+                    int numOfStepsToMove = _index;
+
+                    _index -= numOfStepsToMove;
+
+                    SetValidCursorPosition(CursorIndex - numOfStepsToMove);
+                } else if(keyInfo.Key == ConsoleKey.End) {
+                    if(_index >= _userInput.Length) continue;
+                    int numOfStepsToMove = _userInput.Length - _index;
+
+                    _index += numOfStepsToMove;
+
+                    SetValidCursorPosition(CursorIndex + numOfStepsToMove);
                 } else if(keyInfo.Key == ConsoleKey.UpArrow) {
                     _currentSuggestionIndex = (_suggestions.Count != 0) ? (_currentSuggestionIndex + 1) % _suggestions.Count : 0;
                     _currentSuggestion = _suggestions.Count > 0 ? _suggestions[_currentSuggestionIndex] : "";
