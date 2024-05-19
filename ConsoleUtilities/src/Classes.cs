@@ -2,19 +2,28 @@
     public struct ArgumentsDetails {
         public Dictionary<string, string> FlagDescription { get; private set; }
         public Dictionary<string, int> FlagParameterCapacity { get; private set; }
+        public Dictionary<string, List<string>> FlagAutoComplete { get; set; }
+
+        public List<string> FlagNames {
+            get {
+                return FlagDescription.Keys.ToList();
+            }
+        }
 
         public ArgumentsDetails(ArgumentsDetails argumentsDetail) {
             FlagParameterCapacity = argumentsDetail.FlagParameterCapacity;
             FlagDescription = argumentsDetail.FlagDescription;
+            FlagAutoComplete = argumentsDetail.FlagAutoComplete;
         }
 
         public ArgumentsDetails() {
             FlagDescription = new Dictionary<string, string>();
             FlagParameterCapacity = new Dictionary<string, int>();
+            FlagAutoComplete = new Dictionary<string, List<string>>();
             AddFlagDetail("NONE", "No description.");
         }
 
-        public ArgumentsDetails AddFlagDetail(string flagName, string flagDescription, int flagCapacity = 0) {
+        public ArgumentsDetails AddFlagDetail(string flagName, string flagDescription, int flagCapacity = 0, List<string> autoComplete = null) {
             ArgumentsDetails argumentsDetail = new ArgumentsDetails(this);
 
             if(!FlagDescription.ContainsKey(flagName))
@@ -26,6 +35,11 @@
                 argumentsDetail.FlagParameterCapacity.TryAdd(flagName, flagCapacity);
             else
                 argumentsDetail.FlagParameterCapacity[flagName] = flagCapacity;
+
+            if(!FlagAutoComplete.ContainsKey(flagName))
+                argumentsDetail.FlagAutoComplete.TryAdd(flagName, autoComplete != null ? autoComplete : new List<string>());
+            else
+                argumentsDetail.FlagAutoComplete[flagName].AddRange(autoComplete != null ? autoComplete : new List<string>());
 
             return argumentsDetail;
         }
@@ -50,6 +64,11 @@
 
         public void AddNewFlag(string flag, int capacity = 0) {
             FlagParameterPairs.TryAdd(flag, new List<string>(capacity));
+        }
+
+        public void AddParameterToFlag(string flag, string parameter) {
+            if(!FlagParameterPairs.ContainsKey(flag)) return;
+            FlagParameterPairs[flag].Add(parameter);
         }
 
         public Arguments(ArgumentsDetails argumentsDetail) {
@@ -94,11 +113,20 @@
         public string FlagName { get; private set; }
         public string FlagDescription { get; private set; }
         public int FlagParameterCapacity { get; private set; }
+        public List<string> AutoComplete { get; set; }
+
+        public ArgumentsDetailAttribute(string flagName, string flagdDescription, int flagParameterCapacity, List<string> autoComplete = null) {
+            FlagName = flagName;
+            FlagDescription = flagdDescription;
+            FlagParameterCapacity = flagParameterCapacity;
+            AutoComplete = autoComplete;
+        }
 
         public ArgumentsDetailAttribute(string flagName, string flagdDescription, int flagParameterCapacity) {
             FlagName = flagName;
             FlagDescription = flagdDescription;
             FlagParameterCapacity = flagParameterCapacity;
+            AutoComplete = null;
         }
     }
 }

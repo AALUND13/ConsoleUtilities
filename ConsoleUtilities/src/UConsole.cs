@@ -128,8 +128,6 @@ namespace ConsoleUtility {
                 int b = Convert.ToInt32(hexColor.Substring(4, 2), 16);
                 return $"{r};{g};{b}";
             } else {
-                // Handle the case when hexColor does not contain enough characters
-                // For example, return a default RGB value or throw an exception
                 throw new ArgumentException("Invalid hex color format");
             }
         }
@@ -280,8 +278,8 @@ namespace ConsoleUtility {
         /// <remarks>
         /// Special tags:
         /// <list type="bullet">
-        /// <item>[f1]: Enable bold text.</item>
-        /// <item>[f0]: Disable bold text.</item>
+        /// <item>[f1]: Draw on foreground.</item>
+        /// <item>[f0]: Draw on background.</item>
         /// <item>[i1]: Enable italic text.</item>
         /// <item>[i0]: Disable italic text.</item>
         /// <item>[u1]: Enable underline text.</item>
@@ -343,8 +341,8 @@ namespace ConsoleUtility {
         /// <remarks>
         /// Special tags:
         /// <list type="bullet">
-        /// <item>[f1]: Enable bold text.</item>
-        /// <item>[f0]: Disable bold text.</item>
+        /// <item>[f1]: Draw on foreground.</item>
+        /// <item>[f0]: Draw on background.</item>
         /// <item>[i1]: Enable italic text.</item>
         /// <item>[i0]: Disable italic text.</item>
         /// <item>[u1]: Enable underline text.</item>
@@ -371,7 +369,7 @@ namespace ConsoleUtility {
             } else {
                 // Write the padding characters and then move the cursor back
                 WriteWithCursorRestore(padding);
-                SetValidCursorPosition(CursorIndex - numberOfCharactersToDelete);
+                CursorIndex -= numberOfCharactersToDelete;
             }
         }
 
@@ -394,6 +392,7 @@ namespace ConsoleUtility {
             Write(value);
             return Console.ReadLine();
         }
+
         /// <summary>
         /// Writes the provided rich text to the console, applying formatting based on special tags,
         /// and then reads a line of input from the user.
@@ -401,8 +400,8 @@ namespace ConsoleUtility {
         /// <remarks>
         /// Special tags:
         /// <list type="bullet">
-        /// <item>[f1]: Enable bold text.</item>
-        /// <item>[f0]: Disable bold text.</item>
+        /// <item>[f1]: Draw on foreground.</item>
+        /// <item>[f0]: Draw on background.</item>
         /// <item>[i1]: Enable italic text.</item>
         /// <item>[i0]: Disable italic text.</item>
         /// <item>[u1]: Enable underline text.</item>
@@ -457,9 +456,30 @@ namespace ConsoleUtility {
         }
 
 
-        public static string ReadLineWithSuggestionHandler(string RichTextValue, Func<string, List<string>> handler) {
+        public static string ReadLineWithSuggestions(string richTextValue, List<string> suggestions, bool ignoreCase = true) {
+            return ReadLineWithSuggestions(richTextValue, text => {
+                if(text.Split(' ').Last().Length == 0) return new List<string>();
+
+                List<string> substringSuggestions = new List<string>();
+
+                // Find all suggestions that start with the last word in the input text
+                // if ignoreCase is true, ignore case
+                List<string> currentSuggestions = suggestions.FindAll(suggestion => ignoreCase ? suggestion.ToLower().StartsWith(text.ToLower().Split(' ').Last()) : 
+                    suggestion.StartsWith(text.Split(' ').Last())) ?? new List<string>();
+
+                foreach(string currentSuggestion in currentSuggestions) {
+                    int startIndex = Math.Min(text.Split(' ').Last().Length, currentSuggestion.Length); // Ensure start index doesn't exceed currentSuggestion length
+                    int length = Math.Max(0, currentSuggestion.Length - text.Split(' ').Last().Length); // Calculate length of remaining portion of currentSuggestion
+                    substringSuggestions.Add(currentSuggestion.Substring(startIndex, length));
+                }
+                return substringSuggestions;
+            });
+        }
+
+
+        public static string ReadLineWithSuggestions(string richTextValue, Func<string, List<string>> handler) {
             ResetSuggestions();
-            WriteRichText(RichTextValue);
+            WriteRichText(richTextValue);
 
             ConsoleKeyInfo keyInfo;
 
@@ -478,11 +498,10 @@ namespace ConsoleUtility {
                     UpdateString(0, -endWordLength, endWordLength);
                 } else if(keyInfo.Key == ConsoleKey.Delete) {
                     if(_index >= _userInput.Length) continue;
-                    Debug.WriteLine($"index: {_index} | userInput length: {_userInput.Length}");
                     int startWirdLength = GetStartWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
                     DeleteChars(true, startWirdLength);
-                    SetValidCursorPosition(CursorIndex - startWirdLength);
+                    CursorIndex -= startWirdLength;
                     _userInput = _userInput.Remove(_index, startWirdLength);
 
                     HandleSuggestions(handler);
@@ -490,31 +509,31 @@ namespace ConsoleUtility {
                 } else if(keyInfo.Key == ConsoleKey.LeftArrow) {
                     if(_index == 0) continue;
                     int endWordLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
-
+                     
                     _index -= endWordLength;
 
-                    SetValidCursorPosition(CursorIndex - endWordLength);
+                    CursorIndex -= endWordLength;
                 } else if(keyInfo.Key == ConsoleKey.RightArrow) {
                     if(_index >= _userInput.Length) continue;
                     int startWirdLength = GetStartWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
 
                     _index += startWirdLength;
 
-                    SetValidCursorPosition(CursorIndex + startWirdLength);
+                    CursorIndex += startWirdLength;
                 } else if(keyInfo.Key == ConsoleKey.Home) {
                     if(_index == 0) continue;
                     int numOfStepsToMove = _index;
 
                     _index -= numOfStepsToMove;
 
-                    SetValidCursorPosition(CursorIndex - numOfStepsToMove);
+                    CursorIndex -= numOfStepsToMove;
                 } else if(keyInfo.Key == ConsoleKey.End) {
                     if(_index >= _userInput.Length) continue;
                     int numOfStepsToMove = _userInput.Length - _index;
 
                     _index += numOfStepsToMove;
 
-                    SetValidCursorPosition(CursorIndex + numOfStepsToMove);
+                    CursorIndex += numOfStepsToMove;
                 } else if(keyInfo.Key == ConsoleKey.UpArrow) {
                     _currentSuggestionIndex = (_suggestions.Count != 0) ? (_currentSuggestionIndex + 1) % _suggestions.Count : 0;
                     _currentSuggestion = _suggestions.Count > 0 ? _suggestions[_currentSuggestionIndex] : "";
@@ -549,6 +568,7 @@ namespace ConsoleUtility {
                 _oldSuggestion = _currentSuggestion;
             } while(keyInfo.Key != ConsoleKey.Enter);
 
+            Console.WriteLine();
             return _userInput;
         }
 
@@ -576,7 +596,7 @@ namespace ConsoleUtility {
         }
 
         private static void ResetCursorPostion() {
-            SetValidCursorPosition(CursorIndex + (_userInput.Length - _index));
+            CursorIndex += (_userInput.Length - _index);
             _index = _userInput.Length;
         }
 
@@ -592,7 +612,7 @@ namespace ConsoleUtility {
             _index += offset + indexOffset;
 
             WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{_currentSuggestion}{new string(' ', paddingLength)} ");
-            SetValidCursorPosition(CursorIndex + offset);
+            CursorIndex += offset;
         }
 
         public static void Clear() {
