@@ -9,12 +9,12 @@ using System.Text.RegularExpressions;
 
 namespace TestingConsoleApp {
     [Command("test", "Test Command")]
-    [ArgumentsDetail("-test", "Test Description", 0)]
-    [ArgumentsDetail("-test2", "Test Description", 0)]
     [ArgumentsDetail("NONE", "Test Description", 1)]
+    [ArgumentsDetail("-test", "Test Description", 1)]
     class TestCommand : ICommand {
         public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
-            UConsole.WriteLine("Hello World");
+            UConsole.WriteLine($"NONE: {args["NONE", 0] ?? "Nothing"}");
+            UConsole.WriteLine($"-test: {args["-test", 0] ?? "Nothing"}");
         }
     }
 

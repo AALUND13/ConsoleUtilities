@@ -483,6 +483,11 @@ namespace ConsoleUtility {
 
             ConsoleKeyInfo keyInfo;
 
+            HandleSuggestions(handler);
+            UpdateString();
+
+            _oldSuggestion = _currentSuggestion;
+
             do {
                 keyInfo = Console.ReadKey(true);
 
@@ -555,13 +560,13 @@ namespace ConsoleUtility {
                     HandleSuggestions(handler);
                     UpdateString(suggestionLength);
                 } else if(keyInfo.Key != ConsoleKey.Enter) {
-                    _userInput = _userInput.Insert(_index, keyInfo.KeyChar.ToString());
+                    if(!char.IsControl(keyInfo.KeyChar)) {
+                        _userInput = _userInput.Insert(_index, keyInfo.KeyChar.ToString());
 
-                    HandleSuggestions(handler);
-                    UpdateString(1);
+                        HandleSuggestions(handler);
+                        UpdateString(1);
+                    }
                 } else {
-                    int paddingLength = Math.Max(0, _oldSuggestion.Length - _currentSuggestion.Length);
-
                     string newString = _userInput.Substring(_index, _userInput.Length - _index);
                     WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{new string(' ', _oldSuggestion.Length)}");
                 }
@@ -611,8 +616,9 @@ namespace ConsoleUtility {
             int paddingLength = Math.Max(0, _oldSuggestion.Length - _currentSuggestion.Length) + paddingLengthOffset;
             _index += offset + indexOffset;
 
-            WriteRichTextWithCursorRestore($"{newString}[#{GetHexFromConsoleColor(ConsoleColor.DarkGray)}]{_currentSuggestion}{new string(' ', paddingLength)} ");
-            CursorIndex += offset;
+            Write($"{newString}");
+            WriteWithCursorRestore($"{_currentSuggestion}{new string(' ', paddingLength)} ", ConsoleColor.DarkGray);
+            CursorIndex += offset - newString.Length;
         }
 
         public static void Clear() {
