@@ -95,7 +95,7 @@
         public string CommandName { get; private set; }
         public string CommandDescription { get; private set;  }
         public string CommandCategory { get; private set; }
-        public CommandAttribute(string commandName, string commandDescription = "None", string commandCategory = null) {
+        public CommandAttribute(string commandName, string commandDescription = "No description.", string commandCategory = null) {
             CommandName = commandName;
             CommandDescription = commandDescription;
             CommandCategory = commandCategory;

@@ -3,14 +3,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace ConsoleUtility {
-    /* TODO:
-     * 
-     * Add a way to manually add commands.
-     * Add a way to remove commands.
-     * Add a way to find a command by name.
-     * 
-     */
-
     [Command("exit", "Exits the command prompt.", "Built-in")]
     public class ExitCommand : ICommand {
         public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
@@ -191,6 +183,27 @@ namespace ConsoleUtility {
                 }
             }
             return substringSuggestions;
+        }
+
+        public static void AddCommand(ICommand command, string commandName, string commandDescription = "No description.", string commandCategory = "Unknow", ArgumentsDetails? argumentsDetails = null) {
+            Command newCommand = new Command {
+                CommandName = commandName,
+                CommandDescription = commandDescription,
+                CommandCategory = commandCategory,
+                CommandArgsDetail = argumentsDetails ?? new ArgumentsDetails(),
+                CommandImplementation = command
+            };
+
+            Commands.Add(newCommand);
+        }
+
+        public static void RemoveCommand(string commandName) {
+            Command command = FindCommand(commandName);
+            if(command != null) Commands.Remove(command);
+        }
+
+        public static Command FindCommand(string commandName) {
+            return Commands.Find(c => c.CommandName == commandName);
         }
 
         public static bool ExecuteCommand(string[] args, bool runOnes = false) {
