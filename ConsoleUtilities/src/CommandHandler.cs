@@ -5,27 +5,27 @@ using System.Text.RegularExpressions;
 namespace ConsoleUtility {
     /* TODO:
      * 
-     * Add built-in commands (help, exit, clear).
-     * 
      * Add a way to manually add commands.
      * Add a way to remove commands.
+     * Add a way to find a command by name.
+     * 
      */
 
-    [Command("exit", "Exits the command prompt.")]
+    [Command("exit", "Exits the command prompt.", "Built-in")]
     public class ExitCommand : ICommand {
         public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
             CommandManager.CommandMode = false;
         }
     }
 
-    [Command("clear", "Clears the console.")]
+    [Command("clear", "Clears the console.", "Built-in")]
     public class ClearCommand : ICommand {
         public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
             UConsole.Clear();
         }
     }
 
-    [Command("help", "Displays the list of commands.")]
+    [Command("help", "Displays the list of commands.", "Built-in")]
     [ArgumentsDetail("-c", "Displays the command description.", 1)]
     public class HelpCommand : ICommand {
         public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
@@ -41,8 +41,23 @@ namespace ConsoleUtility {
                     UConsole.WriteLine($"Command '{args["-c", 0]}' not found.", ConsoleColor.Red);
                 }
             } else {
+                Dictionary<string, List<Command>> categorizedCommands = new Dictionary<string, List<Command>> {
+                    { "Unknow", new List<Command>() }
+                };
+
                 foreach (Command command in CommandManager.Commands) {
-                    UConsole.WriteLine($"{command.CommandName} - {command.CommandDescription}");
+                    if(command.CommandCategory != null && !categorizedCommands.ContainsKey(command.CommandCategory)) {
+                        categorizedCommands.Add(command.CommandCategory, new List<Command>());
+                    }
+                    categorizedCommands[command.CommandCategory ?? "Unknow"].Add(command);
+                }
+                foreach (KeyValuePair<string, List<Command>> categorizedCommand in categorizedCommands)
+                {
+                    UConsole.WriteLine($"Category: {categorizedCommand.Key}");
+                    foreach(Command command in categorizedCommand.Value) {
+                        UConsole.WriteLine($"{command.CommandName} - {command.CommandDescription}");
+                    }
+                    if (categorizedCommand.Key != categorizedCommands.Last().Key) UConsole.WriteLine();
                 }
             }
             UConsole.WriteLine();
@@ -82,6 +97,7 @@ namespace ConsoleUtility {
                     Command command = new Command {
                         CommandName = commandAttribute.CommandName,
                         CommandDescription = commandAttribute.CommandDescription,
+                        CommandCategory = commandAttribute.CommandCategory,
                         CommandArgsDetail = argumentsDetails,
                         CommandImplementation = commandInstance
                     };

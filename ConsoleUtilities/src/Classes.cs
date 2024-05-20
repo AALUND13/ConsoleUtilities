@@ -81,6 +81,7 @@
     public class Command {
         public string CommandName { get; internal set; }
         public string CommandDescription { get; internal set; }
+        public string CommandCategory { get; internal set; }
         public ArgumentsDetails CommandArgsDetail { get; internal set; }
         public ICommand CommandImplementation { get; internal set; }
     }
@@ -93,10 +94,11 @@
     public class CommandAttribute : Attribute {
         public string CommandName { get; private set; }
         public string CommandDescription { get; private set;  }
-
-        public CommandAttribute(string commandName, string commandDescription = "None") {
+        public string CommandCategory { get; private set; }
+        public CommandAttribute(string commandName, string commandDescription = "None", string commandCategory = null) {
             CommandName = commandName;
             CommandDescription = commandDescription;
+            CommandCategory = commandCategory;
         }
     }
 
