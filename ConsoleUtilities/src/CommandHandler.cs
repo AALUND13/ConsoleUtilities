@@ -3,14 +3,62 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace ConsoleUtility {
+    /* TODO:
+     * 
+     * Add built-in commands (help, exit, clear).
+     * 
+     * Add a way to manually add commands.
+     * Add a way to remove commands.
+     */
+
+    [Command("exit", "Exits the command prompt.")]
+    public class ExitCommand : ICommand {
+        public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
+            CommandManager.CommandMode = false;
+        }
+    }
+
+    [Command("clear", "Clears the console.")]
+    public class ClearCommand : ICommand {
+        public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
+            UConsole.Clear();
+        }
+    }
+
+    [Command("help", "Displays the list of commands.")]
+    [ArgumentsDetail("-c", "Displays the command description.", 1)]
+    public class HelpCommand : ICommand {
+        public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
+            if(args["-c", 0] != null) {
+                Command command = CommandManager.Commands.Find(c => c.CommandName == args["-c", 0]);
+                if (command != null) {
+                    UConsole.WriteLine($"Command: {command.CommandName}\nDescription: {command.CommandDescription}\n\nArguments:");
+
+                    command.CommandArgsDetail.Foreach((flagName, flagDescription, flagCapacity) => {
+                        UConsole.WriteLine($"Flag: {flagName}\nDescription: {flagDescription}\nCapacity: {flagCapacity}");
+                    });
+                } else {
+                    UConsole.WriteLine($"Command '{args["-c", 0]}' not found.", ConsoleColor.Red);
+                }
+            } else {
+                foreach (Command command in CommandManager.Commands) {
+                    UConsole.WriteLine($"{command.CommandName} - {command.CommandDescription}");
+                }
+            }
+            UConsole.WriteLine();
+        }
+    }
+
     public static class CommandManager {
         public static List<Command> Commands { get; private set; } = new List<Command>();
-        public static bool Running = true;
-        private static List<string> _history = new List<string>();
+        public static bool CommandMode = true;
+
         /// <summary>
         /// {path} is where the command being executed
         /// </summary>
         public static string CommandPromptText = ">> ";
+
+        private static List<string> _history = new List<string>();
 
         public static void Initialized() {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -146,8 +194,8 @@ namespace ConsoleUtility {
                     return false;
                 }
             } else {
-                while(Running) {
-                    if(runOnes) Running = false;
+                while(CommandMode) {
+                    if(runOnes) CommandMode = false;
 
                     string? input = UConsole.ReadLineWithSuggestions(CommandPromptText.Replace("{path}", Environment.CurrentDirectory), CommandsSuggestionsHandler) ?? "";
                     (string[] arguments, string[] argumentsWithoutFormatting) = ParseArguments(input);
