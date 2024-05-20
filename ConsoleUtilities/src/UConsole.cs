@@ -481,7 +481,7 @@ namespace ConsoleUtility {
             ResetSuggestions();
             WriteRichText(richTextValue);
 
-            ConsoleKeyInfo keyInfo;
+            ConsoleKeyInfo keyInfo = new ConsoleKeyInfo();
 
             HandleSuggestions(handler);
             UpdateString();
@@ -489,7 +489,12 @@ namespace ConsoleUtility {
             _oldSuggestion = _currentSuggestion;
 
             do {
-                keyInfo = Console.ReadKey(true);
+                //Try there to catch any exception that might occur
+                try {
+                    keyInfo = Console.ReadKey(true);
+                } catch (Exception) {
+                    continue;
+                }
 
                 if(keyInfo.Key == ConsoleKey.Backspace) {
                     if(_index == 0) continue;
