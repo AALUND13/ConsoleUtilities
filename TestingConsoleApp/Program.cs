@@ -18,23 +18,22 @@ namespace TestingConsoleApp {
         }
     }
 
-    class TestCommand2 : ICommand {
-        public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
-            UConsole.WriteLine($"NONE: {args["NONE", 0] ?? "Nothing"}");
-            UConsole.WriteLine($"-test: {args["-test", 0] ?? "Nothing"}");
-        }
-    }
+    //class TestCommand2 : ICommand {
+    //    public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {
+    //        UConsole.WriteLine($"NONE: {args["NONE", 0] ?? "Nothing"}");
+    //        UConsole.WriteLine($"-test: {args["-test", 0] ?? "Nothing"}");
+    //    }
+    //}
 
     class TestingConsoleApp {
 
         public static void Main(string[] args) {
-            CommandManager.Initialized();
-            CommandManager.AddCommand(new TestCommand2(), "test2", "Command that added by the 'CommandManager.AddCommand()' method", "Test Category", new ArgumentsDetails()
-                .AddFlagDetail("NONE", "Test description", 1)
-                .AddFlagDetail("-test", "Test Description", 1));
+            //CommandManager.AddCommand(new TestCommand2(), "test2", "Command that added by the 'CommandManager.AddCommand()' method", "Test Category", new ArgumentsDetails()
+            //    .AddFlagDetail("NONE", "Test description", 1)
+            //    .AddFlagDetail("-test", "Test Description", 1));
 
-            UConsole.WriteLine(JsonConvert.SerializeObject(CommandManager.Commands[0], Formatting.Indented));
-            UConsole.WriteLine(JsonConvert.SerializeObject(CommandManager.ParseArguments(["testing", "testing2", "testing3", "-test", "testing", "testing2", "testing3", "-test2", "testing", "testing2", "testing3"], CommandManager.Commands[0]), Formatting.Indented));
+            //UConsole.WriteLine(JsonConvert.SerializeObject(CommandManager.Commands[0], Formatting.Indented));
+            //UConsole.WriteLine(JsonConvert.SerializeObject(CommandManager.ParseArguments(["testing", "testing2", "testing3", "-test", "testing", "testing2", "testing3", "-test2", "testing", "testing2", "testing3"], CommandManager.Commands[0]), Formatting.Indented));
             CommandManager.ExecuteCommand(args);
             //// URL of the file containing words
             //string url = "https://gist.githubusercontent.com/h3xx/1976236/raw/bbabb412261386673eff521dddbe1dc815373b1d/wiki-100k.txt";

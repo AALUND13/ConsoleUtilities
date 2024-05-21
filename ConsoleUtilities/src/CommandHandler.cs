@@ -28,6 +28,7 @@ namespace ConsoleUtility {
 
                     command.CommandArgsDetail.Foreach((flagName, flagDescription, flagCapacity) => {
                         UConsole.WriteLine($"Flag: {flagName}\nDescription: {flagDescription}\nCapacity: {flagCapacity}");
+                        if(flagName != command.CommandArgsDetail.FlagNames.Last()) UConsole.WriteLine();
                     });
                 } else {
                     UConsole.WriteLine($"Command '{args["-c", 0]}' not found.", ConsoleColor.Red);
@@ -67,7 +68,7 @@ namespace ConsoleUtility {
 
         private static List<string> _history = new List<string>();
 
-        public static void Initialized() {
+        static CommandManager() {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach(Assembly assembly in assemblies) {
                 IEnumerable<Type> commandTypes = assembly.GetTypes().Where(type =>
