@@ -71,6 +71,12 @@
             });
         }
 
+        public List<string> this[string flag] {
+            get {
+                if (!FlagParameterPairs.ContainsKey(flag)) return new List<string>();
+                return FlagParameterPairs[flag];
+            }
+        }
         public string? this[string flag, int index] {
             get {
                 return GetParametersAtFlag(flag, index);
@@ -86,10 +92,18 @@
         public ICommand CommandImplementation { get; internal set; }
     }
 
+    /// <summary>
+    /// Interface for creating a command.
+    /// </summary>
     public interface ICommand {
         void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly);
     }
 
+    /// <summary>
+    /// Attribute for defining a command.
+    /// 
+    /// It is required to have this attribute in order to register a command.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class CommandAttribute : Attribute {
         public string CommandName { get; private set; }
@@ -102,13 +116,16 @@
         }
     }
 
+    /// <summary>
+    /// Attribute for defining the details of a command's arguments.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class ArgumentsDetailAttribute : Attribute {
         public string FlagName { get; private set; }
         public string FlagDescription { get; private set; }
         public int FlagParameterCapacity { get; private set; }
 
-        public ArgumentsDetailAttribute(string flagName, string flagdDescription, int flagParameterCapacity) {
+        public ArgumentsDetailAttribute(string flagName, string flagdDescription, int flagParameterCapacity = 0) {
             FlagName = flagName;
             FlagDescription = flagdDescription;
             FlagParameterCapacity = flagParameterCapacity;

@@ -5,6 +5,24 @@ using System.Text.RegularExpressions;
 
 namespace ConsoleUtility {
     public static class RichTextHandler {
+        /// <summary>
+        /// Converts a string with rich text tags to a string with ANSI escape codes.
+        /// </summary>
+        /// <remarks>
+        /// Special tags:
+        /// <list type="bullet">
+        /// <item>[f1]: Draw on foreground.</item>
+        /// <item>[f0]: Draw on background.</item>
+        /// <item>[i1]: Enable italic text.</item>
+        /// <item>[i0]: Disable italic text.</item>
+        /// <item>[u1]: Enable underline text.</item>
+        /// <item>[u0]: Disable underline text.</item>
+        /// <item>["ColorName"]: Set text color to the named color (e.g., "Red", "Blue").</item>
+        /// <item>["HexColor"]: Set text color to the hexadecimal color (e.g., "#FF0000").</item>
+        /// </list>
+        /// </remarks>
+        /// <param name="text">The text to be converted to ANSI escape codes.</param>
+        /// <returns>A string containing the converted ANSI escape codes.</returns>
         public static string ToRichText(string? text) {
             if(text == null) return text;
 

@@ -57,8 +57,15 @@ namespace ConsoleUtility {
         }
     }
 
+    /// <summary>
+    /// Manages the commands and executes them.
+    /// </summary>
     public static class CommandManager {
         public static List<Command> Commands { get; private set; } = new List<Command>();
+
+        /// <summary>
+        /// Determines whether the command prompt is active.
+        /// </summary>
         public static bool CommandMode = true;
 
         /// <summary>
@@ -80,6 +87,8 @@ namespace ConsoleUtility {
                     CommandAttribute commandAttribute = commandType.GetCustomAttribute<CommandAttribute>();
                     IEnumerable<ArgumentsDetailAttribute> argumentsDetailAttributes = commandType.GetCustomAttributes<ArgumentsDetailAttribute>();
 
+                    if(Commands.Any(c => c.CommandName == commandAttribute.CommandName)) throw new Exception($"Command '{commandAttribute.CommandName}' already exists.");
+
                     // Create a new instance of ArgumentsDetails for each command
                     ArgumentsDetails argumentsDetails = new ArgumentsDetails();
 
@@ -100,7 +109,7 @@ namespace ConsoleUtility {
             }
         }
 
-        public static Arguments ParseArguments(string[] args, Command command) {
+        private static Arguments ParseArguments(string[] args, Command command) {
             Arguments arguments = new Arguments(command.CommandArgsDetail);
 
             string currentFlag = "NONE";
@@ -130,7 +139,7 @@ namespace ConsoleUtility {
             return arguments;
         }
 
-        public static (string[], string[]) ParseArguments(string input) {
+        private static (string[], string[]) ParseArguments(string input) {
             Regex regex = new Regex(@"""[^""]+""|[^ ]+", RegexOptions.Compiled);
             MatchCollection matches = regex.Matches(input);
             List<string> args = new List<string>();
@@ -186,7 +195,17 @@ namespace ConsoleUtility {
             return substringSuggestions;
         }
 
+        /// <summary>
+        /// Manually add a command.
+        /// </summary>
+        /// <param name="command">The command interface to be added.</param>
+        /// <param name="commandName">The name of the command.</param>
+        /// <param name="commandDescription">The description of the command. Defaults to "No description."</param>
+        /// <param name="commandCategory">The category of the command. Defaults to "Unknown."</param>
+        /// <param name="argumentsDetails">The details of the arguments for the command. This parameter is optional.</param>
         public static void AddCommand(ICommand command, string commandName, string commandDescription = "No description.", string commandCategory = "Unknow", ArgumentsDetails? argumentsDetails = null) {
+            if(Commands.Any(c => c.CommandName == commandName)) throw new Exception($"Command '{commandName}' already exists.");
+
             Command newCommand = new Command {
                 CommandName = commandName,
                 CommandDescription = commandDescription,
@@ -198,17 +217,32 @@ namespace ConsoleUtility {
             Commands.Add(newCommand);
         }
 
+        /// <summary>
+        /// Removes a command.
+        /// </summary>
+        /// <param name="commandName"></param>
         public static void RemoveCommand(string commandName) {
             Command command = FindCommand(commandName);
             if(command != null) Commands.Remove(command);
         }
 
+        /// <summary>
+        /// Finds a command by its name.
+        /// </summary>
+        /// <param name="commandName">The name of the command to find.</param>
+        /// <returns>The command class if found; otherwise, null.</returns>
         public static Command FindCommand(string commandName) {
             return Commands.Find(c => c.CommandName == commandName);
         }
 
-        public static bool ExecuteCommand(string[] args, bool runOnes = false) {
-            if(args.Length > 0 && (runOnes || !string.IsNullOrWhiteSpace(args[0]))) {
+        /// <summary>
+        /// Executes a specified command with the given arguments.
+        /// </summary>
+        /// <param name="args">An array of arguments to be passed to the command.</param>
+        /// <param name="runOnce">A boolean value indicating whether the command should run only once. Defaults to false.</param>
+        /// <returns>True if the command executes successfully; otherwise, false.</returns>
+        public static bool ExecuteCommand(string[] args, bool runOnce = false) {
+            if(args.Length > 0 && (runOnce || !string.IsNullOrWhiteSpace(args[0]))) {
                 Command command = Commands.FirstOrDefault(c => c.CommandName == args[0]);
                 if(command == null) {
                     UConsole.WriteLine($"Command '{args[0]}' not found. Use the \"help\" command to pull up the list of commands.", ConsoleColor.Red);
@@ -225,7 +259,7 @@ namespace ConsoleUtility {
                 }
             } else {
                 while(CommandMode) {
-                    if(runOnes) CommandMode = false;
+                    if(runOnce) CommandMode = false;
 
                     string? input = UConsole.ReadLineWithSuggestions(CommandPromptText.Replace("{path}", Environment.CurrentDirectory), CommandsSuggestionsHandler) ?? "";
                     (string[] arguments, string[] argumentsWithoutFormatting) = ParseArguments(input);
