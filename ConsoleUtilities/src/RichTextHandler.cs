@@ -1,9 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Text.RegularExpressions;
 
-namespace ConsoleUtility {
+namespace AALUND13.ConsoleUtility {
     public static class RichTextHandler {
         /// <summary>
         /// Converts a string with rich text tags to a string with ANSI escape codes.

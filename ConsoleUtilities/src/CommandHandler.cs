@@ -1,8 +1,8 @@
-﻿using ConsoleUtility.Classess;
+﻿using AALUND13.ConsoleUtility.Classess;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace ConsoleUtility {
+namespace AALUND13.ConsoleUtility {
     [Command("exit", "Exits the command prompt.", "Built-in")]
     public class ExitCommand : ICommand {
         public void OnExecute(Arguments args, string whereBeingExecuted, bool executeDirectly) {

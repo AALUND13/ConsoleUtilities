@@ -1,5 +1,5 @@
-﻿using ConsoleUtility;
-using ConsoleUtility.Classess;
+﻿using AALUND13.ConsoleUtility;
+using AALUND13.ConsoleUtility.Classess;
 using System.Drawing;
 
 namespace TestingConsoleApp {
@@ -10,7 +10,6 @@ namespace TestingConsoleApp {
             UConsole.WriteLine("From Hex", "#ff0000");
             UConsole.WriteLine("From Color", Color.Tan);
             UConsole.WriteLine("From Console Color", ConsoleColor.Blue);
-
             UConsole.WriteLine();
             UConsole.WriteLine("Testing Rich Text");
             UConsole.WriteLineRichText("[u1][i1][red]This text is red\n[green]This text is green\n[blue]This text is blue");

@@ -1,9 +1,8 @@
-﻿using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-namespace ConsoleUtility {
+namespace AALUND13.ConsoleUtility {
     /// <summary>
     /// All console colors in campbell theme
     /// </summary>
@@ -742,7 +741,7 @@ namespace ConsoleUtility {
 
                 // Find all suggestions that start with the last word in the input text
                 // if ignoreCase is true, ignore case
-                List<string> currentSuggestions = suggestions.FindAll(suggestion => ignoreCase ? suggestion.ToLower().StartsWith(text.ToLower().Split(' ').Last()) : 
+                List<string> currentSuggestions = suggestions.FindAll(suggestion => ignoreCase ? suggestion.ToLower().StartsWith(text.ToLower().Split(' ').Last()) :
                     suggestion.StartsWith(text.Split(' ').Last())) ?? new List<string>();
 
                 foreach(string currentSuggestion in currentSuggestions) {
@@ -774,7 +773,7 @@ namespace ConsoleUtility {
                 //Try there to catch any exception that might occur
                 try {
                     keyInfo = Console.ReadKey(true);
-                } catch (Exception) {
+                } catch(Exception) {
                     continue;
                 }
 
@@ -801,7 +800,7 @@ namespace ConsoleUtility {
                 } else if(keyInfo.Key == ConsoleKey.LeftArrow) {
                     if(_index == 0) continue;
                     int endWordLength = GetEndWordLength(!keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control));
-                     
+
                     _index -= endWordLength;
 
                     CursorIndex -= endWordLength;
@@ -865,7 +864,7 @@ namespace ConsoleUtility {
         }
 
         private static int GetStartWordLength(bool skip) {
-            if (skip) return 1;
+            if(skip) return 1;
             Regex regex = new Regex(@"^\s*(\w+|.)", RegexOptions.Compiled);
             Match match = regex.Match(_userInput.Substring(_index));
             return match.Success ? match.Value.Length : 1;

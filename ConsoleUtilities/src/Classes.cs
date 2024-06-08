@@ -1,4 +1,4 @@
-﻿namespace ConsoleUtility.Classess {
+﻿namespace AALUND13.ConsoleUtility.Classess {
     public struct ArgumentsDetails {
         public Dictionary<string, string> FlagDescription { get; private set; }
         public Dictionary<string, int> FlagParameterCapacity { get; private set; }
