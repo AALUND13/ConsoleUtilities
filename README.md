@@ -7,13 +7,13 @@ ConsoleUtility is an easy-to-use library for creating console applications in C#
 You can install ConsoleUtility via NuGet Package Manager Console by running the following command:
 
 ```bash
-dotnet add package AALUND13.ConsoleUtility
+dotnet add package AALUND13.ConsoleUtilities
 ```
 
 Or by adding the following line to your `.csproj` file:
 
 ```xml
-<PackageReference Include="AALUND13.ConsoleUtility" Version="1.0.0" />
+<PackageReference Include="AALUND13.ConsoleUtilities" Version="1.0.0" />
 ```
 
 ## Features
