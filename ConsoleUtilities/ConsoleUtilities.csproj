@@ -10,6 +10,9 @@
     <RepositoryUrl>https://github.com/AALUND13/ConsoleUtilities</RepositoryUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <Description>Utilities for console app like command, rich text, and suggestions.</Description>
+    <FileVersion>1.0.1</FileVersion>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <PackageReleaseNotes>Updated README.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
