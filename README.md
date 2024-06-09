@@ -13,7 +13,7 @@ dotnet add package AALUND13.ConsoleUtilities
 Or by adding the following line to your `.csproj` file:
 
 ```xml
-<PackageReference Include="AALUND13.ConsoleUtilities" Version="1.0.0" />
+<PackageReference Include="AALUND13.ConsoleUtilities" Version="1.0.1" />
 ```
 
 ## Features
